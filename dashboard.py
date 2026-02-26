@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-GreenLedger Dashboard
-Real-time monitoring dashboard for carbon emissions
-"""
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -14,30 +8,18 @@ from typing import List, Dict, Any, Optional
 import plotly.express as px
 import plotly.graph_objects as go
 
-
-# =============================================================================
-# Configuration
-# =============================================================================
-
 PAGE_TITLE = "GreenLedger - Carbon Accountability"
 PAGE_ICON = "🌱"
 LAYOUT = "wide"
 
-# Refresh interval in seconds
 REFRESH_INTERVAL = 5
 
-# Plant colors for charts
 PLANT_COLORS = {
     "Plant_A": "#2E86AB",
     "Plant_B": "#A23B72",
     "Plant_C": "#F18F01",
     "Plant_D": "#C73E1D",
 }
-
-
-# =============================================================================
-# Data Management
-# =============================================================================
 
 class DashboardData:
     """Manages data for the dashboard"""
@@ -124,11 +106,6 @@ class DashboardData:
 # Initialize data store
 data_store = DashboardData()
 
-
-# =============================================================================
-# Streamlit UI
-# =============================================================================
-
 def init_page():
     """Initialize the Streamlit page"""
     st.set_page_config(
@@ -137,7 +114,7 @@ def init_page():
         layout=LAYOUT
     )
     
-    # Custom CSS
+   
     st.markdown("""
     <style>
     .main {
@@ -174,23 +151,21 @@ def sidebar():
     # Refresh control
     auto_refresh = st.sidebar.checkbox("Auto-refresh", value=True)
     refresh_rate = st.sidebar.slider("Refresh rate (seconds)", 1, 30, REFRESH_INTERVAL)
-    
-    # Plant selection
+
     all_plants = ["Plant_A", "Plant_B", "Plant_C", "Plant_D"]
     selected_plants = st.sidebar.multiselect(
         "Select Plants",
         all_plants,
         default=all_plants
     )
-    
-    # Time range
+
     time_range = st.sidebar.select_slider(
         "Time Range",
         options=["Last 5 min", "Last 15 min", "Last 30 min", "Last hour", "All time"],
         value="Last 15 min"
     )
     
-    # Theme
+
     theme = st.sidebar.radio("Theme", ["Dark", "Light"])
     
     return {
