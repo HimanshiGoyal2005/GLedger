@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-"""
-GreenLedger - Main Runner
-Helps run the different components of the GreenLedger system
-"""
 
 import subprocess
 import sys
