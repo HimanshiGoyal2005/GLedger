@@ -1,15 +1,8 @@
-#!/usr/bin/env python3
-"""
-GreenLedger Explanation Service
-LLM-powered explanations for compliance and carbon data
-"""
-
 import os
 import json
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
-# Try to import LLM dependencies
 try:
     from langchain_openai import ChatOpenAI
     from langchain.chains import LLMChain
@@ -18,12 +11,6 @@ try:
 except ImportError:
     LANGCHAIN_AVAILABLE = False
 
-
-# =============================================================================
-# Configuration
-# =============================================================================
-
-# Default prompts
 DEFAULT_CONTEXT_TEMPLATE = """You are GreenLedger, an AI assistant for carbon compliance monitoring.
 
 You have access to:
@@ -261,7 +248,6 @@ The facility exceeded the {violation_type} limit by {exceedance:.1f}%. This coul
         if not plant_data:
             return "No plant data available."
         
-        # Calculate efficiency for each plant
         plant_stats = []
         for p in plant_data:
             carbon = p.get('carbon_kg', 0)
@@ -274,7 +260,7 @@ The facility exceeded the {violation_type} limit by {exceedance:.1f}%. This coul
                 'production': production
             })
         
-        # Sort by efficiency
+      
         plant_stats.sort(key=lambda x: x['efficiency'])
         
         lines = ["📊 Plant Efficiency Comparison\n"]
@@ -355,11 +341,6 @@ Your question: "{question}"
 
 Please provide more details for a specific answer."""
 
-
-# =============================================================================
-# Main
-# =============================================================================
-
 if __name__ == "__main__":
     import argparse
     
@@ -369,14 +350,14 @@ if __name__ == "__main__":
     parser.add_argument("--model", default="gpt-4", help="LLM model name")
     args = parser.parse_args()
     
-    # Initialize service
+
     service = ExplanationService(model_name=args.model)
     
     if args.mode == "test":
         # Run test queries
         print("Testing Explanation Service...\n")
         
-        # Test violation explanation
+     
         print("=" * 50)
         print("Test: Violation Explanation")
         print("=" * 50)
@@ -389,7 +370,7 @@ if __name__ == "__main__":
         )
         print(result)
         
-        # Test plant comparison
+      
         print("\n" + "=" * 50)
         print("Test: Plant Comparison")
         print("=" * 50)
@@ -403,7 +384,7 @@ if __name__ == "__main__":
         print(result)
         
     else:
-        # Interactive mode
+ 
         print("GreenLedger Explanation Service")
         print("Type 'quit' to exit\n")
         
