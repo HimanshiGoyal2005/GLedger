@@ -1,29 +1,12 @@
-#!/usr/bin/env python3
-"""
-GreenLedger Compliance Engine
-Real-time compliance checking and violation tracking
-"""
-
 import datetime
 from datetime import timedelta
 
 import pathway as pw
 
-
-# =============================================================================
-# Configuration
-# =============================================================================
-
-# Compliance thresholds
 HOURLY_EMISSION_LIMIT_KG = 500.0  # Max kg CO2 per hour
 DAILY_EMISSION_LIMIT_KG = 10000.0  # Max kg CO2 per day
 EFFICIENCY_MIN = 10.0  # Min kg CO2 per production unit
 EFFICIENCY_MAX = 20.0  # Max kg CO2 per production unit (warning level)
-
-
-# =============================================================================
-# Input Schema
-# =============================================================================
 
 InputSchema = pw.schema_builder(
     columns={
@@ -46,8 +29,6 @@ class FactoryStream:
     production_units: int
     temperature: float
 
-
-# Read from stdin
 factory_stream = FactoryStream(
     pw.io.stdin.read(
         schema=InputSchema,
@@ -56,7 +37,6 @@ factory_stream = FactoryStream(
     )
 )
 
-# Parse timestamp and calculate carbon
 factory_stream = factory_stream.select(
     plant_id=pw.this.plant_id,
     timestamp=pw.this.timestamp.dt.strptime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -67,11 +47,6 @@ factory_stream = factory_stream.select(
     carbon_kg=(pw.this.energy_kwh * 0.82) + (pw.this.fuel_liters * 2.31),
 )
 
-
-# =============================================================================
-# Compliance Rules Engine
-# =============================================================================
-
 class ComplianceRule:
     """Base class for compliance rules"""
     
@@ -80,9 +55,6 @@ class ComplianceRule:
         self.description = description
         self.severity = severity
 
-
-# Rule 1: Hourly Emission Limit
-# Check if hourly emissions exceed limit
 hourly_window = factory_stream.windowby(
     factory_stream.timestamp,
     window=pw.temporal.tumbling(timedelta(hours=1)),
@@ -110,8 +82,6 @@ hourly_violations = hourly_violations.select(
     compliance_status=pw.literal("NON_COMPLIANT"),
 )
 
-
-# Rule 2: Daily Emission Limit
 daily_window = factory_stream.windowby(
     factory_stream.timestamp,
     window=pw.temporal.tumbling(timedelta(days=1)),
@@ -139,8 +109,6 @@ daily_violations = daily_violations.select(
     compliance_status=pw.literal("NON_COMPLIANT"),
 )
 
-
-# Rule 3: Production Efficiency
 factory_efficiency = factory_stream.select(
     plant_id=pw.this.plant_id,
     timestamp=pw.this.timestamp,
@@ -153,7 +121,6 @@ factory_efficiency = factory_stream.select(
     ),
 )
 
-# Inefficient (too much carbon per unit)
 inefficiency_violations = factory_efficiency.filter(
     pw.this.efficiency > EFFICIENCY_MAX
 )
@@ -172,12 +139,6 @@ inefficiency_violations = inefficiency_violations.select(
     compliance_status=pw.literal("NEEDS_IMPROVEMENT"),
 )
 
-
-# =============================================================================
-# Compliance Score Calculation
-# =============================================================================
-
-# Calculate compliance score per plant (rolling window)
 compliance_window = factory_stream.windowby(
     factory_stream.timestamp,
     window=pw.temporal.sliding(
@@ -196,12 +157,7 @@ compliance_window = factory_stream.windowby(
     total_carbon=pw.reducers.sum(pw.this.carbon_kg),
     total_production=pw.reducers.sum(pw.this.production_units),
     reading_count=pw.reducers.count(),
-    
-    # Count violations in window
-    # This would need to be calculated separately
-)
 
-# For now, calculate basic efficiency score
 compliance_window = compliance_window.select(
     pw.this.window_start,
     pw.this.window_end,
@@ -216,7 +172,6 @@ compliance_window = compliance_window.select(
     ),
 )
 
-# Score: 100 = perfect, lower is worse
 compliance_window = compliance_window.select(
     pw.this.window_start,
     pw.this.window_end,
@@ -224,8 +179,7 @@ compliance_window = compliance_window.select(
     pw.this.total_carbon,
     pw.this.total_production,
     pw.this.efficiency,
-    
-    # Score based on efficiency
+ 
     compliance_score=(
         100 - (pw.this.efficiency - EFFICIENCY_MIN) * 10
         if pw.this.efficiency > EFFICIENCY_MIN
@@ -234,11 +188,6 @@ compliance_window = compliance_window.select(
 )
 
 
-# =============================================================================
-# Compliance Summary
-# =============================================================================
-
-# Get current compliance status per plant
 latest_reading = factory_stream.groupby(pw.this.plant_id).reduce(
     plant_id=pw.this._pw_grouping_key,
     latest_timestamp=pw.this.timestamp.dt.max,
@@ -251,8 +200,7 @@ latest_reading = latest_reading.select(
     pw.this.latest_timestamp,
     pw.this.latest_carbon,
     pw.this.total_production,
-    
-    # Determine status
+   
     is_compliant=(
         pw.this.latest_carbon <= HOURLY_EMISSION_LIMIT_KG
     ),
@@ -263,45 +211,31 @@ latest_reading = latest_reading.select(
     ),
 )
 
-
-# =============================================================================
-# Output Streams
-# =============================================================================
-
-# Write hourly violations
 pw.io.stdout.write(
     hourly_violations,
     format="json",
 )
 
-# Write daily violations
 pw.io.stdout.write(
     daily_violations,
     format="json",
 )
 
-# Write inefficiency violations
 pw.io.stdout.write(
     inefficiency_violations,
     format="json",
 )
 
-# Write compliance scores
 pw.io.stdout.write(
     compliance_window,
     format="json",
 )
 
-# Write latest status
 pw.io.stdout.write(
     latest_reading,
     format="json",
 )
 
-
-# =============================================================================
-# Subscription-based compliance alerts
-# =============================================================================
 
 def on_hourly_violation(key, row, time, is_addition):
     """Handle hourly violation events"""
@@ -324,15 +258,10 @@ def on_inefficiency(key, row, time, is_addition):
               f"{row['efficiency']:.1f}kg CO2/unit")
 
 
-# Subscribe to violations
 pw.io.subscribe(hourly_violations, on_hourly_violation)
 pw.io.subscribe(daily_violations, on_daily_violation)
 pw.io.subscribe(inefficiency_violations, on_inefficiency)
 
-
-# =============================================================================
-# Run the pipeline
-# =============================================================================
 
 if __name__ == "__main__":
     import argparse
