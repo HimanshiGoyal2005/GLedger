@@ -1,15 +1,10 @@
-#!/usr/bin/env python3
-"""
-GreenLedger RAG Engine
-Retrieval Augmented Generation for compliance document querying
-"""
 
 import os
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 import json
 
-# Try to import optional dependencies
+
 try:
     from langchain.text_splitter import RecursiveCharacterTextSplitter
     from langchain_community.document_loaders import TextLoader, DirectoryLoader
@@ -22,19 +17,9 @@ except ImportError:
 
 import pathway as pw
 
-
-# =============================================================================
-# Configuration
-# =============================================================================
-
 DOCUMENTS_DIR = Path(__file__).parent / "documents"
 CHROMA_PERSIST_DIR = "./chroma_db"
 EMBEDDING_MODEL = "text-embedding-ada-002"
-
-
-# =============================================================================
-# Document Management
-# =============================================================================
 
 class ComplianceDocumentStore:
     """Manages compliance documents for RAG"""
@@ -175,11 +160,6 @@ class ComplianceDocumentStore:
         
         return "\n\n".join(context_parts)
 
-
-# =============================================================================
-# Pathway Integration
-# =============================================================================
-
 InputSchema = pw.schema_builder(
     columns={
         "query": pw.column_definition(dtype=str),
@@ -200,12 +180,9 @@ query_input = QueryTable(
 )
 
 
-# Initialize document store
 doc_store = ComplianceDocumentStore()
 doc_store.load_documents()
 
-
-# Process queries
 def process_query(query_str: str) -> dict:
     """Process a query and return context"""
     context = doc_store.get_context(query_str)
@@ -222,8 +199,6 @@ queries = query_input.select(
     processed=pw.apply(process_query, pw.this.query),
 )
 
-
-# Output query results
 pw.io.stdout.write(
     queries.select(
         pw.this.query,
@@ -232,11 +207,6 @@ pw.io.stdout.write(
     ),
     format="json",
 )
-
-
-# =============================================================================
-# Main
-# =============================================================================
 
 if __name__ == "__main__":
     import argparse
@@ -249,7 +219,7 @@ if __name__ == "__main__":
                         help="Run a single query")
     args = parser.parse_args()
     
-    # Initialize document store
+  
     doc_store = ComplianceDocumentStore()
     
     if args.rebuild:
@@ -257,13 +227,13 @@ if __name__ == "__main__":
         doc_store.load_documents()
         doc_store.create_vectorstore()
     elif args.query:
-        # Single query mode
+        
         doc_store.load_documents()
         context = doc_store.get_context(args.query)
         print(f"Query: {args.query}")
         print(f"\nContext:\n{context}")
     else:
-        # Run as Pathway app
+   
         print("Starting GreenLedger RAG Engine...")
         print(f"Documents directory: {DOCUMENTS_DIR}")
         
