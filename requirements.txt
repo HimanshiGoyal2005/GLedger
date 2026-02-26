@@ -5,6 +5,7 @@ pathway>=0.10.0
 
 # Dashboard
 streamlit>=1.28.0
+plotly>=5.18.0
 
 # LLM and RAG
 langchain>=0.1.0
