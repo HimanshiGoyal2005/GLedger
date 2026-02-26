@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-GreenLedger Data Simulator
-Simulates real-time carbon emission data from multiple factories
-"""
-
 import json
 import random
 import time
@@ -32,7 +26,6 @@ class CarbonDataSimulator:
         self.base_interval = base_interval
         self.start_time = datetime.now()
         
-        # Base values for each plant (to simulate different operational patterns)
         self.plant_profiles = {
             "Plant_A": {"energy_base": 100, "fuel_base": 20, "production_base": 50, "temp_base": 25},
             "Plant_B": {"energy_base": 150, "fuel_base": 35, "production_base": 75, "temp_base": 28},
@@ -42,15 +35,13 @@ class CarbonDataSimulator:
         
     def generate_reading(self, plant_id: str, timestamp: datetime) -> FactoryData:
         """Generate a single reading for a plant with some random variation"""
-        profile = self.plant_profiles.get(plant_id, self.plant_profiles["Plant_A"])
-        
-        # Add random variation (±20%)
+        profile = self.plant_profiles.get(plant_id, self.plant_profiles["Plant_A"]) 
+   
         energy_kwh = profile["energy_base"] * random.uniform(0.8, 1.2)
         fuel_liters = profile["fuel_base"] * random.uniform(0.8, 1.2)
         production_units = int(profile["production_base"] * random.uniform(0.8, 1.2))
         temperature = profile["temp_base"] + random.uniform(-3, 3)
         
-        # Occasionally generate spike (for anomaly detection testing)
         if random.random() < 0.05:  # 5% chance of spike
             energy_kwh *= 2.5
             fuel_liters *= 2.5
@@ -111,8 +102,7 @@ class CarbonDataSimulator:
                 
                 iteration += 1
                 time.sleep(self.base_interval)
-                
-                # Check duration limit
+
                 if duration_seconds and (time.time() - start_time) >= duration_seconds:
                     break
                     
