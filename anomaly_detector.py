@@ -1,31 +1,8 @@
-#!/usr/bin/env python3
-"""
-GreenLedger Anomaly Detector
-Real-time emission spike detection and threshold violation alerts
-"""
-
 import datetime
 from datetime import timedelta
 from typing import Optional
 
 import pathway as pw
-
-
-# =============================================================================
-# Configuration
-# =============================================================================
-
-# Threshold: emission > 500kg/hour = violation
-EMISSION_THRESHOLD_KG = 500.0
-
-# Rolling statistics window
-STATS_WINDOW_DURATION = timedelta(minutes=10)
-STATS_WINDOW_HOP = timedelta(seconds=30)
-
-
-# =============================================================================
-# Input Schema
-# =============================================================================
 
 InputSchema = pw.schema_builder(
     columns={
@@ -48,8 +25,6 @@ class FactoryStream:
     production_units: int
     temperature: float
 
-
-# Read from stdin
 factory_stream = FactoryStream(
     pw.io.stdin.read(
         schema=InputSchema,
@@ -58,7 +33,7 @@ factory_stream = FactoryStream(
     )
 )
 
-# Parse timestamp and calculate carbon
+
 factory_stream = factory_stream.select(
     plant_id=pw.this.plant_id,
     timestamp=pw.this.timestamp.dt.strptime("%Y-%m-%dT%H:%M:%S.%f"),
@@ -69,12 +44,6 @@ factory_stream = factory_stream.select(
     carbon_kg=(pw.this.energy_kwh * 0.82) + (pw.this.fuel_liters * 2.31),
 )
 
-
-# =============================================================================
-# Anomaly Detection: Threshold Violations
-# =============================================================================
-
-# Filter for readings that exceed the threshold
 violations = factory_stream.filter(
     factory_stream.carbon_kg > EMISSION_THRESHOLD_KG
 )
@@ -90,12 +59,6 @@ violations = violations.select(
     message=f"Emission {pw.this.carbon_kg:.1f}kg exceeds threshold {EMISSION_THRESHOLD_KG}kg",
 )
 
-
-# =============================================================================
-# Rolling Statistics for Spike Detection
-# =============================================================================
-
-# Calculate rolling statistics per plant
 rolling_stats = factory_stream.windowby(
     factory_stream.timestamp,
     window=pw.temporal.sliding(
@@ -124,8 +87,6 @@ rolling_stats = factory_stream.windowby(
     current_fuel=pw.reducers.last(pw.this.fuel_liters),
 )
 
-
-# Calculate z-score for spike detection (anomalies > 2 std deviations)
 rolling_stats = rolling_stats.select(
     pw.this.window_start,
     pw.this.window_end,
@@ -139,14 +100,11 @@ rolling_stats = rolling_stats.select(
     pw.this.current_energy,
     pw.this.current_fuel,
     
-    # Z-score: how many standard deviations from mean
     z_score=(
         (pw.this.current_carbon - pw.this.mean_carbon) / pw.this.std_carbon
         if pw.this.std_carbon > 0
         else 0
     ),
-    
-    # Flag as spike if z-score > 2
     is_spike=(
         (pw.this.current_carbon - pw.this.mean_carbon) / pw.this.std_carbon > 2.0
         if pw.this.std_carbon > 0
@@ -154,8 +112,6 @@ rolling_stats = rolling_stats.select(
     ),
 )
 
-
-# Filter for spikes
 spikes = rolling_stats.filter(pw.this.is_spike)
 
 spikes = spikes.select(
@@ -170,12 +126,6 @@ spikes = spikes.select(
     message=f"Spike detected: {pw.this.z_score:.1f}σ above mean",
 )
 
-
-# =============================================================================
-# High Temperature Alerts
-# =============================================================================
-
-# Alert if temperature exceeds threshold
 temp_alerts = factory_stream.filter(
     factory_stream.temperature > 35  # Celsius
 )
@@ -189,12 +139,6 @@ temp_alerts = temp_alerts.select(
     message=f"Temperature {pw.this.temperature:.1f}°C exceeds normal range",
 )
 
-
-# =============================================================================
-# Low Production Efficiency Alerts
-# =============================================================================
-
-# Calculate efficiency (carbon per unit produced)
 factory_with_efficiency = factory_stream.select(
     pw.this.plant_id,
     pw.this.timestamp,
@@ -207,8 +151,6 @@ factory_with_efficiency = factory_stream.select(
     ),
 )
 
-# Alert if efficiency drops below threshold (high carbon per unit)
-efficiency_threshold = 15.0  # kg CO2 per unit
 low_efficiency = factory_with_efficiency.filter(
     pw.this.efficiency > efficiency_threshold
 )
@@ -224,39 +166,25 @@ low_efficiency = low_efficiency.select(
     message=f"Low efficiency: {pw.this.efficiency:.1f}kg CO2/unit (threshold: {efficiency_threshold})",
 )
 
-
-# =============================================================================
-# Output Streams
-# =============================================================================
-
-# Write violations
 pw.io.stdout.write(
     violations,
     format="json",
 )
 
-# Write spikes
 pw.io.stdout.write(
     spikes,
     format="json",
 )
 
-# Write temperature alerts
 pw.io.stdout.write(
     temp_alerts,
     format="json",
 )
 
-# Write efficiency alerts
 pw.io.stdout.write(
     low_efficiency,
     format="json",
 )
-
-
-# =============================================================================
-# Subscription-based real-time alerts
-# =============================================================================
 
 def on_violation(key, row, time, is_addition):
     """Handle violation events"""
@@ -269,15 +197,8 @@ def on_spike(key, row, time, is_addition):
     if is_addition:
         print(f"⚠️  SPIKE: {row['plant_id']} - z-score: {row['z_score']:.2f}")
 
-
-# Subscribe to violations and spikes for real-time alerts
 pw.io.subscribe(violations, on_violation)
 pw.io.subscribe(spikes, on_spike)
-
-
-# =============================================================================
-# Run the pipeline
-# =============================================================================
 
 if __name__ == "__main__":
     import argparse
