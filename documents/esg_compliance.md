@@ -102,8 +102,3 @@
 - Major: Corrective action within 7 days + fine
 - Critical: Immediate suspension + regulatory involvement
 
-### Contact
-
-- Chief Sustainability Officer: cso@greenledger.io
-- ESG Inquiries: esg@greenledger.io
-- Whistleblower Hotline: 1-800-ETHICS-1
