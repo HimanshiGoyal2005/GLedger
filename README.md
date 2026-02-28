@@ -1,27 +1,27 @@
 # README
 🌱 GreenLedger – Real‑Time Carbon Accountability Engine
-GLedger is a real‑time, AI‑powered carbon emissions monitoring and compliance platform designed for industrial sustainability. It transforms carbon tracking from delayed, batch‑based ESG reporting into a live, explainable, and actionable system.
+GLedger is a real‑time, AI‑powered carbon emissions monitoring and compliance platform designed for industrial sustainability. It transforms carbon tracking from delayed, batch‑based ESG reporting into a **live, explainable, and actionable system**.
 
 The project continuously monitors emissions across multiple industrial plants using streaming data and provides real‑time insights, efficiency metrics, and compliance alerts.
 
-# 🚀Features
-Real-time carbon emissions monitoring for 4 industrial plants
-Carbon emissions chart over time
-Production efficiency metrics and charts
-Plant comparison table
-Efficiency leaderboard with compliance ratings
-Violation alerts display
-Demo Mode (enabled by default) that generates sample data
-
-# 🛠Technology Stack
-Language: Python
-Streaming Engine: Pathway
-Data Processing: Pandas
-Environment: Linux (Ubuntu / WSL)
-Data Source: Simulated live telemetry
+## 🚀Features
+- **Real‑Time Carbon Emissions Monitoring** for 4 industrial plants  
+- **Carbon Emissions Over Time** (trend analysis)  
+- **Production Efficiency Metrics** (carbon per unit produced)  
+- **Plant Comparison Table**  
+- **Efficiency Leaderboard with Compliance Ratings**  
+- **Violation Alerts** for emission threshold breaches  
+- **Demo Mode (Enabled by Default)** with simulated live data
 
 
-# How to Run
+## 🛠Technology Stack
+- **Language:** Python  
+- **Streaming Engine:** Pathway    
+- **Data Processing:** Pandas  
+- **Data Source:** Simulated live telemetry  
+
+
+## How to Run
 1️⃣ Setup Environment
 
 python3 -m venv venv
@@ -36,8 +36,7 @@ python -m green_ledger.demo_pipeline --rows 50 --rate 10
 
 python -m green_ledger.demo_pipeline --static
 
-
-# 🌍Why GreenLedger?
+## 🌍Why GreenLedger?
 
 Most sustainability tools focus on reporting after the damage is done.
 GreenLedger enables:
@@ -53,7 +52,8 @@ Scalable, production‑ready design
 
 It treats carbon as a live operational signal, not just a reporting metric.
 
-# 🔮Future Enhancements
+
+## 🔮Future Enhancements
 
 Real IoT sensor integration
 
@@ -63,10 +63,8 @@ Advanced dashboards
 
 Multi‑region compliance rules
 
-
-# 👥Team
+## 👥Team
 
 Himanshi(Team Leader)
 Srishti
-
 
