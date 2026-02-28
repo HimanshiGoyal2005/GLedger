@@ -1,4 +1,4 @@
-# README
+## README
 🌱 GreenLedger – Real‑Time Carbon Accountability Engine
 GLedger is a real‑time, AI‑powered carbon emissions monitoring and compliance platform designed for industrial sustainability. It transforms carbon tracking from delayed, batch‑based ESG reporting into a **live, explainable, and actionable system**.
 
@@ -66,5 +66,6 @@ Multi‑region compliance rules
 ## 👥Team
 
 Himanshi(Team Leader)
+
 Srishti
 
